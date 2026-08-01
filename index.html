@@ -110,9 +110,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (tab === "confirmed") return;
     const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 12 * 60)), 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [tab]);
 
   const CATEGORIES = useMemo(() => {
     const cats = Array.from(new Set(products.map((p) => p.category)));
@@ -174,7 +175,7 @@ function App() {
         <div className="bg-[#1B3B27] px-5 pt-5 pb-4 rounded-b-3xl shadow-md relative z-10 shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <img src={LOGO_SRC} alt="DadarMandi2Home logo" className="w-12 h-12 rounded-full bg-white object-cover shrink-0" />
+              <img src={LOGO_SRC} alt="DadarMandi2Home logo" className="w-16 h-16 rounded-full bg-white object-cover shrink-0" />
               <div className="leading-tight">
                 <div className="font-display text-[19px] text-[#F5F7EF] tracking-tight">DadarMandi2Home</div>
                 <div className="flex items-center gap-1 text-[#C7D6C4]">
@@ -185,7 +186,7 @@ function App() {
             </div>
             <HarvestClock seconds={seconds} />
           </div>
-          <h1 className="font-display text-[16px] leading-tight text-[#F5F7EF] mb-3">
+          <h1 className="font-display text-[13px] leading-tight text-[#F5F7EF] mb-3">
             Fresh from the mandi,<br/><span className="text-[#C6F135]">before your breakfast.</span>
           </h1>
           <div className="flex items-center gap-2 bg-[#0F2718] rounded-xl px-3 py-2.5">
