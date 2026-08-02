@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.dadarmandi2home.app",
+        "sha256_cert_fingerprints": ["60:70:09:1F:47:1A:AE:BD:9D:1B:F4:43:80:BD:47:68:23:19:E9:98:69:B3:90:7E:DB:09:79:15:33:D0:4F:CB"]
+      }
+    }]
