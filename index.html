@@ -276,6 +276,23 @@ function App() {
     setTimeout(() => setFeedbackSubmitted(false), 4000);
   };
 
+  const orderAgain = (order) => {
+    const newCart = {};
+    order.items.forEach((it) => {
+      newCart[it.id] = (newCart[it.id] || 0) + it.qty;
+    });
+    setCart(newCart);
+    setAddress({
+      name: order.customer_name,
+      phone: order.phone,
+      line1: order.address_line,
+      landmark: order.landmark || "",
+      pincode: order.pincode,
+    });
+    setAddressFound(true);
+    setTab("basket");
+  };
+
   const placeOrder = async () => {
     setPlacing(true);
     setPlaceError(null);
@@ -632,10 +649,16 @@ function App() {
                         {o.payment_status === "paid" ? "Paid Online" : o.payment_status === "cash_on_delivery" ? "Cash on Delivery" : o.payment_status}
                       </span>
                     </div>
-                    <div className="text-[12px] text-[#4B5A4E] mb-1">
+                    <div className="text-[12px] text-[#4B5A4E] mb-2">
                       {o.items.map((it) => `${it.name} x${it.qty}`).join(", ")}
                     </div>
-                    <div className="font-mono text-[14px] font-semibold text-[#1C2321]">₹{o.total}</div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[14px] font-semibold text-[#1C2321]">₹{o.total}</span>
+                      <button onClick={() => orderAgain(o)}
+                        className="px-3 py-1.5 rounded-lg border-2 border-[#1B3B27] text-[#1B3B27] text-[11.5px] font-semibold">
+                        Order Again
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
