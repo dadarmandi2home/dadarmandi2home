@@ -77,8 +77,14 @@ function App() {
   const [addressFound, setAddressFound] = useState(false);
   const [lookupPhone, setLookupPhone] = useState("");
   const [myOrders, setMyOrders] = useState(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(null);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
+
+  const CATEGORY_ORDER = ["Vegetables", "Chinese", "Fruits"];
 
   // Load products from Supabase on first load
   useEffect(() => {
@@ -87,13 +93,17 @@ function App() {
         .from("products")
         .select("*")
         .eq("in_stock", true)
-        .order("category", { ascending: true })
         .order("name", { ascending: true });
       if (error) {
         setLoadError(error.message);
       } else {
+        const sorted = [...data].sort((a, b) => {
+          const ai = CATEGORY_ORDER.indexOf(a.category);
+          const bi = CATEGORY_ORDER.indexOf(b.category);
+          return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        });
         // add a stable "picked X hours ago" freshness value per item
-        const withFreshness = data.map((p) => ({ ...p, picked: 3 + (p.id % 18) }));
+        const withFreshness = sorted.map((p) => ({ ...p, picked: 3 + (p.id % 18) }));
         setProducts(withFreshness);
       }
       setLoading(false);
@@ -102,6 +112,11 @@ function App() {
 
   const CATEGORIES = useMemo(() => {
     const cats = Array.from(new Set(products.map((p) => p.category)));
+    cats.sort((a, b) => {
+      const ai = CATEGORY_ORDER.indexOf(a);
+      const bi = CATEGORY_ORDER.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
     return ["All", ...cats];
   }, [products]);
 
@@ -244,6 +259,21 @@ function App() {
       return;
     }
     setMyOrders(data);
+  };
+
+  const submitFeedback = async () => {
+    if (!feedbackText.trim()) return;
+    setFeedbackSubmitting(true);
+    setFeedbackError(null);
+    const { error } = await sb.from("feedback").insert({ message: feedbackText.trim() });
+    setFeedbackSubmitting(false);
+    if (error) {
+      setFeedbackError("Could not send this right now. Please try again.");
+      return;
+    }
+    setFeedbackText("");
+    setFeedbackSubmitted(true);
+    setTimeout(() => setFeedbackSubmitted(false), 4000);
   };
 
   const placeOrder = async () => {
@@ -403,6 +433,25 @@ function App() {
                 })}
               </div>
             )}
+
+            {/* Missing item feedback box */}
+            <div className="mt-5 bg-white rounded-2xl p-4 border border-[#E5E7DE]">
+              <p className="text-[13px] font-semibold text-[#1C2321] mb-1">Don't see something you're looking for?</p>
+              <p className="text-[11px] text-[#8B978C] mb-2">Let us know if any vegetable, fruit, or Chinese item is missing from the list.</p>
+              <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="e.g. Please add drumsticks / shevga"
+                rows={2}
+                className="w-full bg-[#F0F3EB] rounded-lg px-3 py-2.5 text-[13px] outline-none text-[#1C2321] resize-none mb-2" />
+              {feedbackError && <p className="text-[11px] text-[#B23A2E] mb-2">{feedbackError}</p>}
+              {feedbackSubmitted ? (
+                <p className="text-[12.5px] text-[#4C6B1F] font-semibold">✓ Thanks! We've noted this down.</p>
+              ) : (
+                <button onClick={submitFeedback} disabled={!feedbackText.trim() || feedbackSubmitting}
+                  className="px-4 py-2 rounded-lg bg-[#1B3B27] text-white text-[12.5px] font-semibold disabled:opacity-40">
+                  {feedbackSubmitting ? "Sending…" : "Submit"}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
