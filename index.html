@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -543,10 +543,13 @@ function App() {
             <div className="flex-1 px-5 py-2 flex flex-col gap-3">
               <div>
                 <label className="text-[11px] text-[#8B978C] mb-1 block">Phone number</label>
-                <input value={address.phone}
-                  onChange={(e) => { setAddress((a) => ({ ...a, phone: e.target.value })); setAddressFound(false); }}
+                <input value={address.phone} type="tel" inputMode="numeric" maxLength={10}
+                  onChange={(e) => { const digits = e.target.value.replace(/\D/g, "").slice(0, 10); setAddress((a) => ({ ...a, phone: digits })); setAddressFound(false); }}
                   onBlur={(e) => lookupSavedAddress(e.target.value)}
                   placeholder="10-digit mobile number" className="w-full bg-[#F0F3EB] rounded-lg px-3 py-2.5 text-[13px] outline-none text-[#1C2321]" />
+                {address.phone && address.phone.length !== 10 && (
+                  <p className="text-[11px] text-[#B23A2E] mt-1">Please enter a valid 10-digit phone number.</p>
+                )}
                 {addressFound && (
                   <p className="text-[11px] text-[#4C6B1F] mt-1">✓ Welcome back! We've filled in your last saved address — edit if anything's changed.</p>
                 )}
@@ -596,7 +599,7 @@ function App() {
                 </button>
               </div>
               <button
-                disabled={!address.name || !address.phone || !address.line1 || !address.pincode || placing}
+                disabled={!address.name || address.phone.length !== 10 || !address.line1 || !address.pincode || placing}
                 onClick={placeOrder}
                 className="w-full bg-[#C6F135] text-[#1B3B27] rounded-xl py-3.5 text-[15px] font-bold shadow-lg border-2 border-[#1B3B27] disabled:opacity-40 disabled:shadow-none">
                 {placing ? "Processing…" : paymentMethod === "cod" ? "Place Order (Cash on Delivery)" : `Pay ₹${cartTotal} & Place Order`}
@@ -627,7 +630,8 @@ function App() {
           <div className="flex-1 overflow-y-auto px-5 py-4">
             <h2 className="font-display text-[20px] text-[#1C2321] mb-3">My Orders</h2>
             <div className="flex gap-2 mb-4">
-              <input value={lookupPhone} onChange={(e) => setLookupPhone(e.target.value)}
+              <input value={lookupPhone} type="tel" inputMode="numeric" maxLength={10}
+                onChange={(e) => setLookupPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                 placeholder="Enter your phone number"
                 className="flex-1 bg-[#F0F3EB] rounded-lg px-3 py-2.5 text-[13px] outline-none text-[#1C2321]" />
               <button onClick={findMyOrders}
