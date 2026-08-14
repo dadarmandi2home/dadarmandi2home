@@ -84,7 +84,7 @@ function App() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
 
-  const CATEGORY_ORDER = ["Vegetables", "Chinese", "Fruits"];
+  const CATEGORY_ORDER = ["Vegetables", "Chinese", "Fruits", "Flowers"];
 
   // Load products from Supabase on first load
   useEffect(() => {
@@ -382,7 +382,7 @@ function App() {
           </h1>
           <div className="flex items-center gap-2 bg-[#0F2718] rounded-xl px-3 py-2.5">
             <Icon.Search className="w-4 h-4 text-[#8FA998]" />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fruit, sabzi, herbs…"
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search fruit, sabzi, phool…"
               className="bg-transparent outline-none text-[13px] text-[#F5F7EF] placeholder-[#6B8A75] flex-1" />
           </div>
         </div>
