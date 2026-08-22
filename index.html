@@ -290,7 +290,7 @@ function App() {
     const { error } = await sb.from("feedback").insert({ message: feedbackText.trim() });
     setFeedbackSubmitting(false);
     if (error) {
-      setFeedbackError("Error: " + error.message);
+      setFeedbackError("Could not send this right now. Please try again.");
       return;
     }
     setFeedbackText("");
