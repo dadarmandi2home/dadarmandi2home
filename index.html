@@ -81,6 +81,7 @@ function App() {
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
 
@@ -169,7 +170,18 @@ function App() {
     setTab("confirmed");
   };
 
-  const downloadReceipt = () => {
+  const imageUrlToDataURL = async (url) => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const downloadReceipt = async () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     let y = 20;
@@ -194,7 +206,7 @@ function App() {
     doc.text(`Payment: ${paymentMethod === "cod" ? "Cash on Delivery" : "Paid Online"}`, 14, y); y += 10;
 
     doc.setFont("helvetica", "bold");
-    doc.text("Item", 14, y);
+    doc.text("Item", 26, y);
     doc.text("Qty", 120, y);
     doc.text("Price", 150, y);
     doc.text("Amount", 175, y);
@@ -203,15 +215,25 @@ function App() {
     y += 6;
 
     doc.setFont("helvetica", "normal");
-    cartItems.forEach((p) => {
-      doc.text(`${p.name} (${p.unit})`, 14, y, { maxWidth: 100 });
+    for (const p of cartItems) {
+      const rowTop = y - 5;
+      if (p.image_url) {
+        try {
+          const dataUrl = await imageUrlToDataURL(p.image_url);
+          const format = dataUrl.includes("image/png") ? "PNG" : "JPEG";
+          doc.addImage(dataUrl, format, 14, rowTop, 9, 9);
+        } catch (e) {
+          // fall back silently to no image for this row
+        }
+      }
+      doc.text(`${p.name} (${p.unit})`, 26, y, { maxWidth: 88 });
       doc.text(String(p.qty), 120, y);
       doc.text(`Rs ${p.price}`, 150, y);
       doc.text(`Rs ${p.qty * p.price}`, 175, y);
-      y += 7;
-    });
+      y += 11;
+    }
 
-    y += 4;
+    y += 2;
     doc.line(14, y, 196, y);
     y += 8;
     doc.setFont("helvetica", "bold");
@@ -274,6 +296,16 @@ function App() {
     setFeedbackText("");
     setFeedbackSubmitted(true);
     setTimeout(() => setFeedbackSubmitted(false), 4000);
+  };
+
+  const cancelOrder = async (order) => {
+    if (!window.confirm("Cancel this order? This cannot be undone.")) return;
+    setCancellingId(order.id);
+    const { error } = await sb.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+    setCancellingId(null);
+    if (!error) {
+      setMyOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status: "cancelled" } : o)));
+    }
   };
 
   const orderAgain = (order) => {
@@ -646,22 +678,34 @@ function App() {
             {myOrders && myOrders.length > 0 && (
               <div className="flex flex-col gap-3">
                 {myOrders.map((o) => (
-                  <div key={o.id} className="bg-white rounded-xl border border-[#E5E7DE] p-3">
+                  <div key={o.id} className={`bg-white rounded-xl border p-3 ${o.status === "cancelled" ? "border-[#E5E7DE] opacity-60" : "border-[#E5E7DE]"}`}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] text-[#8B978C]">{new Date(o.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</span>
-                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${o.payment_status === "paid" ? "bg-[#EAF9CE] text-[#4C6B1F]" : "bg-[#FFF1DE] text-[#8A5A1C]"}`}>
-                        {o.payment_status === "paid" ? "Paid Online" : o.payment_status === "cash_on_delivery" ? "Cash on Delivery" : o.payment_status}
-                      </span>
+                      <span className="text-[12px] text-[#4B5A4E] font-semibold">{new Date(o.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                      {o.status === "cancelled" ? (
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-[#F3E0DE] text-[#B23A2E]">Cancelled</span>
+                      ) : (
+                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${o.payment_status === "paid" ? "bg-[#EAF9CE] text-[#4C6B1F]" : "bg-[#FFF1DE] text-[#8A5A1C]"}`}>
+                          {o.payment_status === "paid" ? "Paid Online" : o.payment_status === "cash_on_delivery" ? "Cash on Delivery" : o.payment_status}
+                        </span>
+                      )}
                     </div>
                     <div className="text-[12px] text-[#4B5A4E] mb-2">
                       {o.items.map((it) => `${it.name} x${it.qty}`).join(", ")}
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-[14px] font-semibold text-[#1C2321]">₹{o.total}</span>
-                      <button onClick={() => orderAgain(o)}
-                        className="px-3 py-1.5 rounded-lg border-2 border-[#1B3B27] text-[#1B3B27] text-[11.5px] font-semibold">
-                        Order Again
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {o.status !== "cancelled" && (
+                          <button onClick={() => cancelOrder(o)} disabled={cancellingId === o.id}
+                            className="px-3 py-1.5 rounded-lg border-2 border-[#B23A2E] text-[#B23A2E] text-[11.5px] font-semibold disabled:opacity-40">
+                            {cancellingId === o.id ? "…" : "Cancel"}
+                          </button>
+                        )}
+                        <button onClick={() => orderAgain(o)}
+                          className="px-3 py-1.5 rounded-lg border-2 border-[#1B3B27] text-[#1B3B27] text-[11.5px] font-semibold">
+                          Order Again
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
