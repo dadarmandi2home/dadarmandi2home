@@ -129,6 +129,30 @@ function App() {
     });
   }, [products, cat, query]);
 
+  const groupedProducts = useMemo(() => {
+    const map = {};
+    for (const p of filtered) {
+      if (!map[p.name]) {
+        map[p.name] = {
+          name: p.name,
+          category: p.category,
+          marathi_name: p.marathi_name,
+          image_url: p.image_url,
+          emoji: p.emoji,
+          picked: p.picked,
+          variants: [],
+        };
+      }
+      map[p.name].variants.push({ id: p.id, unit: p.unit, price: p.price });
+    }
+    return Object.values(map).map((g) => ({
+      ...g,
+      variants: g.variants.sort((a, b) => a.price - b.price),
+    }));
+  }, [filtered]);
+
+  const [selectedVariant, setSelectedVariant] = useState({});
+
   const addOne = (id) => {
     setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
     setJustAdded((j) => ({ ...j, [id]: true }));
@@ -438,24 +462,26 @@ function App() {
               <p className="text-center pt-16 text-[#7C8B7E] text-[13px]">Loading fresh produce…</p>
             ) : loadError ? (
               <p className="text-center pt-16 text-[#B23A2E] text-[13px]">Couldn't load products: {loadError}</p>
-            ) : filtered.length === 0 ? (
+            ) : groupedProducts.length === 0 ? (
               <div className="text-center pt-16 text-[#7C8B7E]">
                 <p className="font-display text-lg mb-1">Nothing in this bunch.</p>
                 <p className="text-[13px]">Try another search or category.</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                {filtered.map((p) => {
-                  const qty = cart[p.id] || 0;
-                  const fresh = freshnessLabel(p.picked);
+                {groupedProducts.map((g) => {
+                  const selectedId = selectedVariant[g.name] || g.variants[0].id;
+                  const variant = g.variants.find((v) => v.id === selectedId) || g.variants[0];
+                  const qty = cart[variant.id] || 0;
+                  const fresh = freshnessLabel(g.picked);
                   return (
-                    <div key={p.id} className="bg-white rounded-xl p-2 border border-[#E5E7DE] flex flex-col">
+                    <div key={g.name} className="bg-white rounded-xl p-2 border border-[#E5E7DE] flex flex-col">
                       <div className="flex items-start justify-between mb-0.5">
                         <div className="relative">
-                          {p.image_url ? (
-                            <img src={p.image_url} alt={p.name} className="w-9 h-9 rounded-md object-cover" />
+                          {g.image_url ? (
+                            <img src={g.image_url} alt={g.name} className="w-9 h-9 rounded-md object-cover" />
                           ) : (
-                            <div className="text-2xl">{p.emoji}</div>
+                            <div className="text-2xl">{g.emoji}</div>
                           )}
                           {qty > 0 && (
                             <span className="absolute -top-1 -right-2 bg-[#E4572E] text-white text-[8px] font-mono font-semibold rounded-full min-w-[14px] h-3.5 px-1 flex items-center justify-center">{qty}</span>
@@ -465,17 +491,28 @@ function App() {
                           fresh.tone === "hot" ? "bg-[#EAF9CE] text-[#4C6B1F]" : fresh.tone === "warm" ? "bg-[#FFF1DE] text-[#8A5A1C]" : "bg-[#EFEFEF] text-[#6B6B6B]"
                         }`}>{fresh.text}</span>
                       </div>
-                      <div className="text-[12px] font-semibold text-[#1C2321] leading-tight">{p.name}</div>
-                      {p.marathi_name && <div className="text-[10px] text-[#4B5A4E] leading-tight">{p.marathi_name}</div>}
-                      <div className="text-[10px] text-[#8B978C] mb-1">{p.unit}</div>
+                      <div className="text-[12px] font-semibold text-[#1C2321] leading-tight">{g.name}</div>
+                      {g.marathi_name && <div className="text-[10px] text-[#4B5A4E] leading-tight">{g.marathi_name}</div>}
+                      {g.variants.length > 1 ? (
+                        <select
+                          value={selectedId}
+                          onChange={(e) => setSelectedVariant((prev) => ({ ...prev, [g.name]: Number(e.target.value) }))}
+                          className="text-[10px] text-[#4B5A4E] mb-1 bg-[#F0F3EB] rounded px-1 py-0.5 outline-none">
+                          {g.variants.map((v) => (
+                            <option key={v.id} value={v.id}>{v.unit} · ₹{v.price}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="text-[10px] text-[#8B978C] mb-1">{variant.unit}</div>
+                      )}
                       <div className="flex items-end gap-1.5 mb-1">
-                        <span className="font-mono text-[13px] font-semibold text-[#1C2321]">₹{p.price}</span>
+                        <span className="font-mono text-[13px] font-semibold text-[#1C2321]">₹{variant.price}</span>
                       </div>
                       <div className="mt-auto">
-                        <button onClick={() => addOne(p.id)}
+                        <button onClick={() => addOne(variant.id)}
                           className={`w-full py-1 rounded-md text-[11px] font-semibold transition-all duration-150 active:scale-95 ${
-                            justAdded[p.id] ? "bg-[#1B3B27] text-[#C6F135] border border-[#1B3B27]" : "border border-[#1B3B27] text-[#1B3B27] hover:bg-[#1B3B27] hover:text-white"
-                          }`}>{justAdded[p.id] ? "Added ✓" : "Add"}</button>
+                            justAdded[variant.id] ? "bg-[#1B3B27] text-[#C6F135] border border-[#1B3B27]" : "border border-[#1B3B27] text-[#1B3B27] hover:bg-[#1B3B27] hover:text-white"
+                          }`}>{justAdded[variant.id] ? "Added ✓" : "Add"}</button>
                       </div>
                     </div>
                   );
