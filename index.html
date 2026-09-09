@@ -20,6 +20,7 @@
   body { margin:0; font-family:'Inter',sans-serif; }
   .font-display { font-family: 'Fraunces', serif; }
   .font-mono { font-family: 'IBM Plex Mono', monospace; }
+  .app-height { height: 100vh; height: 100dvh; }
 </style>
 </head>
 <body>
@@ -417,7 +418,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#E7E2D4] flex items-center justify-center p-2 overflow-auto">
+    <div className="app-height w-full bg-[#E7E2D4] flex items-center justify-center p-2 overflow-auto">
       <div className="relative w-full max-w-[390px] h-full max-h-[820px] bg-[#F5F7EF] rounded-[2.5rem] shadow-2xl overflow-hidden border-[6px] border-[#1C2321] flex flex-col">
 
         {/* Header */}
