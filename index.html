@@ -650,8 +650,12 @@ function App() {
               </div>
               <div>
                 <label className="text-[11px] text-[#8B978C] mb-1 block">Pincode</label>
-                <input value={address.pincode} onChange={(e) => setAddress((a) => ({ ...a, pincode: e.target.value }))}
+                <input value={address.pincode} type="tel" inputMode="numeric" maxLength={6}
+                  onChange={(e) => setAddress((a) => ({ ...a, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
                   placeholder="e.g. 400028" className="w-full bg-[#F0F3EB] rounded-lg px-3 py-2.5 text-[13px] outline-none text-[#1C2321]" />
+                {address.pincode.length === 6 && !/^400\d{3}$/.test(address.pincode) && (
+                  <p className="text-[11px] text-[#B23A2E] mt-1">Sorry, we currently deliver only within Mumbai (pincode starting with 400).</p>
+                )}
               </div>
               {placeError && <p className="text-[12px] text-[#B23A2E]">{placeError}</p>}
             </div>
@@ -685,7 +689,7 @@ function App() {
                 </button>
               </div>
               <button
-                disabled={!address.name || address.phone.length !== 10 || !address.line1 || !address.pincode || placing}
+                disabled={!address.name || address.phone.length !== 10 || !address.line1 || !/^400\d{3}$/.test(address.pincode) || placing}
                 onClick={placeOrder}
                 className="w-full bg-[#C6F135] text-[#1B3B27] rounded-xl py-3.5 text-[15px] font-bold shadow-lg border-2 border-[#1B3B27] disabled:opacity-40 disabled:shadow-none">
                 {placing ? "Processing…" : paymentMethod === "cod" ? "Place Order (Cash on Delivery)" : `Pay ₹${grandTotal} & Place Order`}
