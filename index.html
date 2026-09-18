@@ -654,7 +654,7 @@ function App() {
                   onChange={(e) => setAddress((a) => ({ ...a, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
                   placeholder="e.g. 400028" className="w-full bg-[#F0F3EB] rounded-lg px-3 py-2.5 text-[13px] outline-none text-[#1C2321]" />
                 {address.pincode.length === 6 && !/^400\d{3}$/.test(address.pincode) && (
-                  <p className="text-[11px] text-[#B23A2E] mt-1">Sorry, we currently deliver only within Mumbai (pincode starting with 400).</p>
+                  <p className="text-[11px] text-[#B23A2E] mt-1">Sorry, we currently deliver only within Mumbai.</p>
                 )}
               </div>
               {placeError && <p className="text-[12px] text-[#B23A2E]">{placeError}</p>}
