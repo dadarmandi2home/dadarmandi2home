@@ -91,6 +91,7 @@ function App() {
   const [feedbackError, setFeedbackError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
   const [showStory, setShowStory] = useState(false);
+  const [previewProduct, setPreviewProduct] = useState(null);
   const [storyAvailable, setStoryAvailable] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
@@ -513,6 +514,19 @@ function App() {
           </div>
         )}
 
+        {/* Product image preview */}
+        {previewProduct && (
+          <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-6" onClick={() => setPreviewProduct(null)}>
+            <button onClick={() => setPreviewProduct(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center text-lg">✕</button>
+            <img src={previewProduct.image_url} alt={previewProduct.name} className="max-w-full max-h-[70%] rounded-2xl object-contain shadow-2xl" onClick={(e) => e.stopPropagation()} />
+            <div className="mt-4 text-center">
+              <div className="font-display text-[18px] text-white">{previewProduct.name}</div>
+              {previewProduct.marathi_name && <div className="text-[13px] text-[#C7D6C4]">{previewProduct.marathi_name}</div>}
+            </div>
+          </div>
+        )}
+
         {/* Product grid */}
         {tab === "shop" && (
           <div className="flex-1 overflow-y-auto px-5 pb-6">
@@ -547,7 +561,9 @@ function App() {
                       <div className="flex items-start justify-between mb-0.5">
                         <div className="relative">
                           {g.image_url ? (
-                            <img src={g.image_url} alt={g.name} className="w-9 h-9 rounded-md object-cover" />
+                            <button onClick={(e) => { e.stopPropagation(); setPreviewProduct(g); }} className="block">
+                              <img src={g.image_url} alt={g.name} className="w-12 h-12 rounded-md object-cover active:opacity-70" />
+                            </button>
                           ) : (
                             <div className="text-2xl">{g.emoji}</div>
                           )}
