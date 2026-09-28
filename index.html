@@ -95,7 +95,7 @@ function App() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
 
-  const CATEGORY_ORDER = ["Vegetables", "Chinese", "Fruits", "Flowers"];
+  const CATEGORY_ORDER = ["Vegetables", "Exotic", "Fruits", "Flowers"];
 
   // Load products from Supabase on first load
   useEffect(() => {
@@ -479,7 +479,7 @@ function App() {
             className="mx-5 mt-3 mb-1 flex items-center gap-2 bg-[#1B3B27] rounded-xl px-3 py-2 shrink-0 border border-[#2E5A3E]">
             <span className="w-8 h-8 rounded-full bg-[#C6F135] flex items-center justify-center text-[15px] shrink-0">📹</span>
             <div className="text-left flex-1 min-w-0">
-              <div className="text-[12px] font-semibold text-[#F5F7EF]">Today's Fresh Stock</div>
+              <div className="text-[12px] font-semibold text-[#F5F7EF]">What's New</div>
               <div className="text-[10px] text-[#8FA998]">Tap to watch what arrived today</div>
             </div>
             <span className="text-[#C6F135] text-[11px] font-semibold">Watch →</span>
